@@ -51,25 +51,10 @@ public static class DeepHealthCheckExtension
         {
             if (heathChecks.All(type => type.Name != healtCheckConfig.HealthCheckName)) continue;
 
-            // Dependency Injection
-            switch (healtCheckConfig.ServiceLifetime)
-            {
-                case ServiceLifetime.Singleton:
-                    services.TryAddSingleton(typeof(IHealthCheck),
-                        heathChecks.First(type => type.Name == healtCheckConfig.HealthCheckName));
-                    break;
-                case ServiceLifetime.Scoped:
-                    services.TryAddScoped(typeof(IHealthCheck),
-                        heathChecks.First(type => type.Name == healtCheckConfig.HealthCheckName));
-                    break;
-                case ServiceLifetime.Transient:
-                    services.TryAddTransient(typeof(IHealthCheck),
-                        heathChecks.First(type => type.Name == healtCheckConfig.HealthCheckName));
-                    break;
-                default:
-                    continue;
-            }
+            var healthCheckType = heathChecks.First(type => type.Name == healtCheckConfig.HealthCheckName);
 
+            services.TryAddEnumerable(new ServiceDescriptor(typeof(IHealthCheck), healthCheckType, healtCheckConfig.ServiceLifetime));
+            
             healthCheckBuilder.Add(new HealthCheckRegistration(
                 healtCheckConfig.ServiceName,
                 serviceProvider =>
@@ -103,7 +88,7 @@ public static class DeepHealthCheckExtension
         where THealthCheck : class, IHealthCheck
         where TContext : class
     {
-        ConfigurationManager.SetContextOption<THealthCheck, TContext>();
+        ConfigurationManager.SetHealthCheckContext<THealthCheck, TContext>();
         return builder;
     }
 

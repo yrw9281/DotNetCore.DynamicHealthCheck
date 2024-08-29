@@ -9,10 +9,10 @@ public class DeepHealthCheckConfigService<THealthCheck>(IConfiguration configura
 {
     public TContext GetContext<TContext>(HealthCheckContext healthCheckContext)
         where TContext : class
-        => ConfigurationManager.GetContextOption<THealthCheck, TContext>(configuration, healthCheckContext.Registration.Name);
+        => ConfigurationManager.GetHealthCheckContext<THealthCheck, TContext>(configuration, healthCheckContext.Registration.Name);
     
-    public TContext GetContext<TContext>() where TContext : class
-        => ConfigurationManager.GetContextOption<THealthCheck, TContext>(configuration);
+    public IEnumerable<TContext> GetContexts<TContext>() where TContext : class
+        => ConfigurationManager.GetHealthCheckContexts<THealthCheck, TContext>(configuration);
 
     public HealthStatus GetFailureStatus(string serviceName)
         => ConfigurationManager.GetHealthCheckConfig<THealthCheck>(configuration, serviceName)

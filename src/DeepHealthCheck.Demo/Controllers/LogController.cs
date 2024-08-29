@@ -19,4 +19,11 @@ public class LogController(ILogger<LogController> logger) : ControllerBase
         logger.LogError("log error");
         return Ok("log error");
     }
+    
+    [HttpGet("LogWarning")]
+    public IActionResult LogWarning()
+    {
+        logger.LogWarning("log warning");
+        return Ok("log warning");
+    }
 }

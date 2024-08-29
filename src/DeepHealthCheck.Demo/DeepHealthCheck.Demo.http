@@ -1,8 +1,13 @@
 @Dynamic_Health_Check_Demo_HostAddress = http://localhost:5183
 
 ###
+ 
+GET {{Dynamic_Health_Check_Demo_HostAddress}}/health
+Accept: application/json
 
-GET {{Dynamic_Health_Check_Demo_HostAddress}}/log/logCritical
+###
+ 
+GET {{Dynamic_Health_Check_Demo_HostAddress}}/log/logWarning
 Accept: application/json
 
 ###
@@ -11,6 +16,6 @@ GET {{Dynamic_Health_Check_Demo_HostAddress}}/log/logError
 Accept: application/json
 
 ###
- 
-GET {{Dynamic_Health_Check_Demo_HostAddress}}/health
+
+GET {{Dynamic_Health_Check_Demo_HostAddress}}/log/logCritical
 Accept: application/json

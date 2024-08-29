@@ -13,7 +13,7 @@ internal static class ConfigurationManager
     private static readonly Dictionary<Type, Type> ConfigsDictionary = new();
 
     // Method to register a health check with its configuration type
-    public static void SetContextOption<THealthCheck, TContext>()
+    public static void SetHealthCheckContext<THealthCheck, TContext>()
         where THealthCheck : class, IHealthCheck
         where TContext : class
     {
@@ -21,9 +21,9 @@ internal static class ConfigurationManager
             ConfigsDictionary[typeof(THealthCheck)] = typeof(TContext);
     }
 
-    // Method to get the configuration for a health check
-    public static TContext GetContextOption<THealthCheck, TContext>(IConfiguration configuration,
-        string? serviceName = null)
+    // Method to get the config context for a health check
+    public static TContext GetHealthCheckContext<THealthCheck, TContext>(IConfiguration configuration,
+        string serviceName)
         where THealthCheck : class, IHealthCheck
         where TContext : class
     {
@@ -38,10 +38,37 @@ internal static class ConfigurationManager
                 s.GetChildren().Any(c =>
                     string.IsNullOrEmpty(serviceName) ||
                     c.Key == Constants.PROPERTY_NAME_SERVICENAME && c.Value == serviceName))?
-            .GetSection(Constants.PROPERTY_NAME_CONTEXT)?
+            .GetSection(Constants.PROPERTY_NAME_CONTEXT)
             .Get<TContext>();
 
         return context
+               ?? throw new ArgumentException($"The type {typeof(THealthCheck).Name} has not been well configured.");
+    }
+
+    // Method to get the config context list for health check
+    public static IEnumerable<TContext> GetHealthCheckContexts<THealthCheck, TContext>(IConfiguration configuration)
+        where THealthCheck : class, IHealthCheck
+        where TContext : class
+    {
+        if (!ConfigsDictionary.TryGetValue(typeof(THealthCheck), out var configType) ||
+            configType != typeof(TContext))
+            throw new ArgumentException($"The type {typeof(THealthCheck).Name} has not been well configured.");
+
+        var sections = GetHealthCheckConfigSection(configuration).GetChildren();
+
+        var result = new List<TContext>();
+
+        foreach (var section in sections)
+        {
+            var target = section.GetSection(Constants.PROPERTY_NAME_CONTEXT)?
+                .Get<TContext>();
+            
+            if (target == null) continue;
+            
+            result.Add(target);
+        }
+
+        return result
                ?? throw new ArgumentException($"The type {typeof(THealthCheck).Name} has not been well configured.");
     }
 
