@@ -41,9 +41,12 @@ internal class LogSeverityLogger(
     public bool IsEnabled(LogLevel logLevel)
     {
         return _logSeverities.Any(s =>
-            s.LogLevels != null && 
+            s.LogLevels != null &&
             s.LogLevels.Any(l => l.LogLevel == logLevel));
     }
 
-    public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+    public IDisposable? BeginScope<TState>(TState state) where TState : notnull
+    {
+        return null;
+    }
 }

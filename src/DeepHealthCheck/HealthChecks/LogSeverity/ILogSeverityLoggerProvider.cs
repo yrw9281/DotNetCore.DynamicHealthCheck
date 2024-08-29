@@ -4,5 +4,4 @@ namespace DeepHealthCheck.HealthChecks.LogSeverity;
 
 public interface ILogSeverityLoggerProvider : ILoggerProvider
 {
-    
 }

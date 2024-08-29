@@ -10,7 +10,7 @@ internal class LogSeverityHealthCheck(
     IDeepHealthCheckConfigService<LogSeverityHealthCheck> deepHealthCheckConfigService) : IHealthCheck
 {
     public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context,
-        CancellationToken cancellationToken = new CancellationToken())
+        CancellationToken cancellationToken = new())
     {
         var logSeverity = deepHealthCheckConfigService.GetContext<LogSeverityContext>(context);
         var failureStatus = deepHealthCheckConfigService.GetFailureStatus(context);

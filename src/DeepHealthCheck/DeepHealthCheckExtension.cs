@@ -15,14 +15,19 @@ namespace DeepHealthCheck;
 public static class DeepHealthCheckExtension
 {
     /// <summary>
-    /// Registers dynamic health checks based on the provided configuration.
-    /// This method scans the application's assemblies for implementations of <see cref="IHealthCheck"/> and registers them.
-    /// It also injects dependencies for generic health checks if required, and configures each health check according to the specified settings.
+    ///     Registers dynamic health checks based on the provided configuration.
+    ///     This method scans the application's assemblies for implementations of <see cref="IHealthCheck" /> and registers
+    ///     them.
+    ///     It also injects dependencies for generic health checks if required, and configures each health check according to
+    ///     the specified settings.
     /// </summary>
     /// <param name="services">The service collection to which the health checks will be added.</param>
     /// <param name="configuration">The application configuration used to retrieve health check settings.</param>
-    /// <param name="configSection">The name of the configuration section containing health check settings. Defaults to <see cref="Constants.DEFAULT_CONFIG_SECTION_NAME"/>.</param>
-    /// <returns>An <see cref="IHealthChecksBuilder"/> instance for further health check configuration.</returns>
+    /// <param name="configSection">
+    ///     The name of the configuration section containing health check settings. Defaults to
+    ///     <see cref="Constants.DEFAULT_CONFIG_SECTION_NAME" />.
+    /// </param>
+    /// <returns>An <see cref="IHealthChecksBuilder" /> instance for further health check configuration.</returns>
     public static IHealthChecksBuilder AddDeepHealthCheck(this IServiceCollection services,
         IConfiguration configuration,
         string configSection = Constants.DEFAULT_CONFIG_SECTION_NAME)
@@ -53,8 +58,9 @@ public static class DeepHealthCheckExtension
 
             var healthCheckType = heathChecks.First(type => type.Name == healtCheckConfig.HealthCheckName);
 
-            services.TryAddEnumerable(new ServiceDescriptor(typeof(IHealthCheck), healthCheckType, healtCheckConfig.ServiceLifetime));
-            
+            services.TryAddEnumerable(new ServiceDescriptor(typeof(IHealthCheck), healthCheckType,
+                healtCheckConfig.ServiceLifetime));
+
             healthCheckBuilder.Add(new HealthCheckRegistration(
                 healtCheckConfig.ServiceName,
                 serviceProvider =>
@@ -93,13 +99,16 @@ public static class DeepHealthCheckExtension
     }
 
     /// <summary>
-    /// Configures the application to use dynamic health checks middleware.
-    /// This method sets up a custom middleware that responds to requests at the specified path with health check status.
-    /// It also integrates a logger provider for health check logging based on the provided configuration.
+    ///     Configures the application to use dynamic health checks middleware.
+    ///     This method sets up a custom middleware that responds to requests at the specified path with health check status.
+    ///     It also integrates a logger provider for health check logging based on the provided configuration.
     /// </summary>
     /// <param name="app">The application builder used to configure the HTTP request pipeline.</param>
-    /// <param name="path">The path where the health check requests will be handled. Defaults to <see cref="Constants.DEFAULT_HEALTH_CHECK_PATH"/>.</param>
-    /// <returns>The updated <see cref="IApplicationBuilder"/> instance for further configuration.</returns>
+    /// <param name="path">
+    ///     The path where the health check requests will be handled. Defaults to
+    ///     <see cref="Constants.DEFAULT_HEALTH_CHECK_PATH" />.
+    /// </param>
+    /// <returns>The updated <see cref="IApplicationBuilder" /> instance for further configuration.</returns>
     public static IApplicationBuilder UseDeepHealthCheck(this IApplicationBuilder app,
         string path = Constants.DEFAULT_HEALTH_CHECK_PATH)
     {

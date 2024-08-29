@@ -4,7 +4,13 @@ namespace DeepHealthCheck.HealthChecks.LogSeverity;
 
 public class LogSeverityLoggerProvider(ILogSeverityLogger logger) : ILogSeverityLoggerProvider
 {
-    public ILogger CreateLogger(string categoryName) => logger;
+    public ILogger CreateLogger(string categoryName)
+    {
+        return logger;
+    }
 
-    public void Dispose() => GC.SuppressFinalize(this);
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+    }
 }

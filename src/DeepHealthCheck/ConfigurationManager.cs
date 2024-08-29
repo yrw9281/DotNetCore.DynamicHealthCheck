@@ -6,11 +6,11 @@ namespace DeepHealthCheck;
 
 internal static class ConfigurationManager
 {
-    // Default config section
-    public static string ConfigSection { get; set; } = Constants.DEFAULT_CONFIG_SECTION_NAME;
-
     // Dictionary to hold the mapping between IHealthCheck and its config type
     private static readonly Dictionary<Type, Type> ConfigsDictionary = new();
+
+    // Default config section
+    public static string ConfigSection { get; set; } = Constants.DEFAULT_CONFIG_SECTION_NAME;
 
     // Method to register a health check with its configuration type
     public static void SetHealthCheckContext<THealthCheck, TContext>()
@@ -37,7 +37,7 @@ internal static class ConfigurationManager
             .FirstOrDefault(s =>
                 s.GetChildren().Any(c =>
                     string.IsNullOrEmpty(serviceName) ||
-                    c.Key == Constants.PROPERTY_NAME_SERVICENAME && c.Value == serviceName))?
+                    (c.Key == Constants.PROPERTY_NAME_SERVICENAME && c.Value == serviceName)))?
             .GetSection(Constants.PROPERTY_NAME_CONTEXT)
             .Get<TContext>();
 
@@ -62,9 +62,9 @@ internal static class ConfigurationManager
         {
             var target = section.GetSection(Constants.PROPERTY_NAME_CONTEXT)?
                 .Get<TContext>();
-            
+
             if (target == null) continue;
-            
+
             result.Add(target);
         }
 
@@ -74,25 +74,35 @@ internal static class ConfigurationManager
 
     // Get root configuration
     public static DeepHealthCheckRoot? Get(IConfiguration configuration)
-        => GetRootSection(configuration).Get<DeepHealthCheckRoot>();
+    {
+        return GetRootSection(configuration).Get<DeepHealthCheckRoot>();
+    }
 
     // Get health check config
     public static DeepHealthCheckConfig GetHealthCheckConfig<THealthCheck>(IConfiguration configuration,
         string serviceName)
         where THealthCheck : class, IHealthCheck
-        => GetHealthCheckConfigsByHealthCheckName(configuration, typeof(THealthCheck).Name)?
-               .FirstOrDefault(s => s.ServiceName == serviceName)
-           ?? throw new ArgumentException($"The type {typeof(THealthCheck).Name} has not been well configured.");
+    {
+        return GetHealthCheckConfigsByHealthCheckName(configuration, typeof(THealthCheck).Name)?
+                   .FirstOrDefault(s => s.ServiceName == serviceName)
+               ?? throw new ArgumentException($"The type {typeof(THealthCheck).Name} has not been well configured.");
+    }
 
     private static IConfigurationSection GetRootSection(IConfiguration configuration)
-        => configuration.GetSection(ConfigSection);
+    {
+        return configuration.GetSection(ConfigSection);
+    }
 
     private static IConfigurationSection GetHealthCheckConfigSection(IConfiguration configuration)
-        => GetRootSection(configuration).GetSection(Constants.PROPERTY_NAME_HEALTHCHECHS);
+    {
+        return GetRootSection(configuration).GetSection(Constants.PROPERTY_NAME_HEALTHCHECHS);
+    }
 
     private static IEnumerable<DeepHealthCheckConfig>? GetHealthCheckConfigsByHealthCheckName(
         IConfiguration configuration,
         string healthCheckName)
-        => GetHealthCheckConfigSection(configuration).Get<List<DeepHealthCheckConfig>>()?
+    {
+        return GetHealthCheckConfigSection(configuration).Get<List<DeepHealthCheckConfig>>()?
             .Where(c => c.HealthCheckName == healthCheckName);
+    }
 }
