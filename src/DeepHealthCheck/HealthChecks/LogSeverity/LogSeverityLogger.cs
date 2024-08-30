@@ -14,6 +14,8 @@ internal class LogSeverityLogger(
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception,
         Func<TState, Exception?, string> formatter)
     {
+        if (eventId.Name == Constants.HEALTH_CHECK_LOG_EVENT_NAME) return;
+
         if (!IsEnabled(logLevel)) return;
 
         foreach (var logSeverityContext in _logSeverities)
@@ -23,7 +25,6 @@ internal class LogSeverityLogger(
 
             // Store log to memory cache
             var logMessage = formatter(state, exception);
-            if (logMessage.Contains(Constants.HEALTH_CHECK_ERROR_MESSAGE_KEYWORD)) continue;
             var cacheKey = $"{logLevel}{Constants.SEPARATOR}{eventId.Id}";
             memoryCache.Set(cacheKey, logMessage, TimeSpan.FromMinutes(logLevelConfig.PeriodInMinutes));
 
