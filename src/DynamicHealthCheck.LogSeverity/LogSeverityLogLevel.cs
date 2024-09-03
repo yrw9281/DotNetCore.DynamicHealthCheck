@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace DeepHealthCheck.HealthChecks.LogSeverity.Models;
+namespace DynamicHealthCheck.LogSeverity;
 
 internal class LogSeverityLogLevel
 {

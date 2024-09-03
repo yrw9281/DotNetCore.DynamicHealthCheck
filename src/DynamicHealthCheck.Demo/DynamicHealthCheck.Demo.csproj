@@ -4,11 +4,11 @@
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <RootNamespace>Dynamic_Health_Check_Demo</RootNamespace>
+        <RootNamespace>DynamicHealthCheck.Demo</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\DeepHealthCheck\DeepHealthCheck.csproj"/>
+        <ProjectReference Include="..\DynamicHealthCheck\DynamicHealthCheck.csproj" />
     </ItemGroup>
 
 </Project>

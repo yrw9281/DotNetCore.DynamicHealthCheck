@@ -1,8 +1,8 @@
-using DeepHealthCheck.Models;
+using DynamicHealthCheck.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-namespace DeepHealthCheck;
+namespace DynamicHealthCheck;
 
 internal static class ConfigurationManager
 {
@@ -73,13 +73,13 @@ internal static class ConfigurationManager
     }
 
     // Get root configuration
-    public static DeepHealthCheckRoot? Get(IConfiguration configuration)
+    public static DynamicHealthCheckRoot? Get(IConfiguration configuration)
     {
-        return GetRootSection(configuration).Get<DeepHealthCheckRoot>();
+        return GetRootSection(configuration).Get<DynamicHealthCheckRoot>();
     }
 
     // Get health check config
-    public static DeepHealthCheckConfig GetHealthCheckConfig<THealthCheck>(IConfiguration configuration,
+    public static DynamicHealthCheckConfig GetHealthCheckConfig<THealthCheck>(IConfiguration configuration,
         string serviceName)
         where THealthCheck : class, IHealthCheck
     {
@@ -98,11 +98,11 @@ internal static class ConfigurationManager
         return GetRootSection(configuration).GetSection(Constants.PROPERTY_NAME_HEALTHCHECHS);
     }
 
-    private static IEnumerable<DeepHealthCheckConfig>? GetHealthCheckConfigsByHealthCheckName(
+    private static IEnumerable<DynamicHealthCheckConfig>? GetHealthCheckConfigsByHealthCheckName(
         IConfiguration configuration,
         string healthCheckName)
     {
-        return GetHealthCheckConfigSection(configuration).Get<List<DeepHealthCheckConfig>>()?
+        return GetHealthCheckConfigSection(configuration).Get<List<DynamicHealthCheckConfig>>()?
             .Where(c => c.HealthCheckName == healthCheckName);
     }
 }

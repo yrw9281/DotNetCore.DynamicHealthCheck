@@ -1,10 +1,10 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-namespace DeepHealthCheck.Services;
+namespace DynamicHealthCheck.Services;
 
-public class DeepHealthCheckConfigService<THealthCheck>(IConfiguration configuration)
-    : IDeepHealthCheckConfigService<THealthCheck>
+public class DynamicHealthCheckConfigService<THealthCheck>(IConfiguration configuration)
+    : IDynamicHealthCheckConfigService<THealthCheck>
     where THealthCheck : class, IHealthCheck
 {
     public TContext GetContext<TContext>(HealthCheckContext healthCheckContext)

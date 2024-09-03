@@ -1,6 +1,6 @@
-using DeepHealthCheck;
+using DynamicHealthCheck;
 
-namespace Dynamic_Health_Check_Demo;
+namespace DynamicHealthCheck.Demo;
 
 public static class Program
 {
@@ -11,13 +11,13 @@ public static class Program
 
         // Add services to the container
         builder.Services.AddControllers();
-        builder.Services.AddDeepHealthCheck(builder.Configuration);
+        builder.Services.AddDynamicHealthCheck(builder.Configuration);
 
         // Build the application
         var app = builder.Build();
 
         // Configure the HTTP request pipeline
-        app.UseDeepHealthCheck();
+        app.UseDynamicHealthCheck();
         app.UseRouting();
         app.MapControllers();
 

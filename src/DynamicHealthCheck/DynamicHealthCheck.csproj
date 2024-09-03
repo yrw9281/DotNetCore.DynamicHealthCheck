@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
         <Version>8.0.0</Version>
-        <RootNamespace>DeepHealthCheck</RootNamespace>
+        <RootNamespace>DynamicHealthCheck</RootNamespace>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>

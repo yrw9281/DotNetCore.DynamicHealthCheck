@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-namespace DeepHealthCheck.Services;
+namespace DynamicHealthCheck.Services;
 
-public interface IDeepHealthCheckConfigService<THealthCheck> where THealthCheck : IHealthCheck
+public interface IDynamicHealthCheckConfigService<THealthCheck> where THealthCheck : IHealthCheck
 {
     TContext GetContext<TContext>(HealthCheckContext healthCheckContext) where TContext : class;
     IEnumerable<TContext> GetContexts<TContext>() where TContext : class;

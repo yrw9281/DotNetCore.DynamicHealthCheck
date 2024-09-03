@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace Dynamic_Health_Check_Demo.Controllers;
+namespace DynamicHealthCheck.Demo.Controllers;
 
 [ApiController]
 [Route("[controller]")]

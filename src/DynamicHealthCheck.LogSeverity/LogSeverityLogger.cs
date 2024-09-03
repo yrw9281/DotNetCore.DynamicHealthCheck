@@ -1,13 +1,12 @@
-using DeepHealthCheck.HealthChecks.LogSeverity.Models;
-using DeepHealthCheck.Services;
+using DynamicHealthCheck.Services;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
-namespace DeepHealthCheck.HealthChecks.LogSeverity;
+namespace DynamicHealthCheck.LogSeverity;
 
 internal class LogSeverityLogger(
     IMemoryCache memoryCache,
-    IDeepHealthCheckConfigService<LogSeverityHealthCheck> configService) : ILogSeverityLogger
+    IDynamicHealthCheckConfigService<LogSeverityHealthCheck> configService) : ILogSeverityLogger
 {
     private readonly List<LogSeverityContext> _logSeverities = configService.GetContexts<LogSeverityContext>().ToList();
 

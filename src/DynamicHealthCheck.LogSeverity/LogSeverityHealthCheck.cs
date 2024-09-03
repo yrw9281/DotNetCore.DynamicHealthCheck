@@ -1,19 +1,18 @@
-using DeepHealthCheck.HealthChecks.LogSeverity.Models;
-using DeepHealthCheck.Services;
+using DynamicHealthCheck.Services;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-namespace DeepHealthCheck.HealthChecks.LogSeverity;
+namespace DynamicHealthCheck.LogSeverity;
 
 internal class LogSeverityHealthCheck(
     IMemoryCache memoryCache,
-    IDeepHealthCheckConfigService<LogSeverityHealthCheck> deepHealthCheckConfigService) : IHealthCheck
+    IDynamicHealthCheckConfigService<LogSeverityHealthCheck> dynamicHealthCheckConfigService) : IHealthCheck
 {
     public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context,
         CancellationToken cancellationToken = new())
     {
-        var logSeverity = deepHealthCheckConfigService.GetContext<LogSeverityContext>(context);
-        var failureStatus = deepHealthCheckConfigService.GetFailureStatus(context);
+        var logSeverity = dynamicHealthCheckConfigService.GetContext<LogSeverityContext>(context);
+        var failureStatus = dynamicHealthCheckConfigService.GetFailureStatus(context);
 
         try
         {

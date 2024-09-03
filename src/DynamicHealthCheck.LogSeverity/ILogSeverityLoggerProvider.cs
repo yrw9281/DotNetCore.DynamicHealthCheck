@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace DeepHealthCheck.HealthChecks.LogSeverity;
+namespace DynamicHealthCheck.LogSeverity;
 
 internal interface ILogSeverityLoggerProvider : ILoggerProvider
 {

@@ -1,9 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-namespace DeepHealthCheck.Models;
+namespace DynamicHealthCheck.Models;
 
-public class DeepHealthCheckConfig
+public class DynamicHealthCheckConfig
 {
     public string ServiceName { get; set; } = string.Empty;
     public string HealthCheckName { get; set; } = string.Empty;

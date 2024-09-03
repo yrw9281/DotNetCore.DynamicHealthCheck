@@ -1,7 +1,5 @@
-﻿using DeepHealthCheck.HealthChecks.LogSeverity;
-using DeepHealthCheck.HealthChecks.LogSeverity.Models;
-using DeepHealthCheck.Models;
-using DeepHealthCheck.Services;
+﻿using DynamicHealthCheck.Models;
+using DynamicHealthCheck.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -10,9 +8,9 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 
-namespace DeepHealthCheck;
+namespace DynamicHealthCheck;
 
-public static class DeepHealthCheckExtension
+public static class DynamicHealthCheckExtension
 {
     /// <summary>
     ///     Registers dynamic health checks based on the provided configuration.
@@ -25,7 +23,7 @@ public static class DeepHealthCheckExtension
     ///     <see cref="Constants.DEFAULT_CONFIG_SECTION_NAME" />.
     /// </param>
     /// <returns>An <see cref="IHealthChecksBuilder" /> instance for further health check configuration.</returns>
-    public static IHealthChecksBuilder AddDeepHealthCheck(this IServiceCollection services,
+    public static IHealthChecksBuilder AddDynamicHealthCheck(this IServiceCollection services,
         IConfiguration configuration,
         string configSectionName = Constants.DEFAULT_CONFIG_SECTION_NAME)
     {
@@ -39,7 +37,7 @@ public static class DeepHealthCheckExtension
         if (IsDisabled(rootConfig)) return healthChecksBuilder;
 
         // Add related services
-        services.AddSingleton(typeof(IDeepHealthCheckConfigService<>), typeof(DeepHealthCheckConfigService<>));
+        services.AddSingleton(typeof(IDynamicHealthCheckConfigService<>), typeof(DynamicHealthCheckConfigService<>));
 
         // Get all IHealthCheck implements
         var heathChecks = AppDomain.CurrentDomain.GetAssemblies()
@@ -76,13 +74,13 @@ public static class DeepHealthCheckExtension
         }
 
         // Add self provided HealthChecks if configured
-        RegisterDeepHealthCheckDependencies(services, rootConfig, healthChecksBuilder);
+        // RegisterDynamicHealthCheckDependencies(services, rootConfig, healthChecksBuilder);
 
         return healthChecksBuilder;
     }
 
     /// <summary>
-    ///     Binds a custom health check to its corresponding context model, enabling the health check instance to easily access its configuration context through dependency injection via <see cref="IDeepHealthCheckConfigService" />.
+    ///     Binds a custom health check to its corresponding context model, enabling the health check instance to easily access its configuration context through dependency injection via <see cref="IDynamicHealthCheckConfigService{THealthCheck}" />.
     /// </summary>
     /// <typeparam name="THealthCheck">Custom health check class.</typeparam>
     /// <typeparam name="TContext">Custom health check context class.</typeparam>
@@ -104,12 +102,12 @@ public static class DeepHealthCheckExtension
     ///     <see cref="Constants.DEFAULT_HEALTH_CHECK_PATH" />.
     /// </param>
     /// <returns>The updated <see cref="IApplicationBuilder" /> instance for further configuration.</returns>
-    public static IApplicationBuilder UseDeepHealthCheck(this IApplicationBuilder app,
+    public static IApplicationBuilder UseDynamicHealthCheck(this IApplicationBuilder app,
         string path = Constants.DEFAULT_HEALTH_CHECK_PATH)
     {
         var healthCheckConfig = ConfigurationManager.Get(app.ApplicationServices.GetService<IConfiguration>()!);
 
-        UseDeepHealthCheckDependencies(app, healthCheckConfig);
+        // UseDynamicHealthCheckDependencies(app, healthCheckConfig);
 
         // Use custom middleware for health checks
         app.Use(async (context, next) =>
@@ -131,42 +129,42 @@ public static class DeepHealthCheckExtension
         return app;
     }
 
-    private static bool IsDisabled(DeepHealthCheckRoot? healthCheckConfig)
+    private static bool IsDisabled(DynamicHealthCheckRoot? healthCheckConfig)
     {
         return healthCheckConfig == null ||
                healthCheckConfig.Disabled ||
                healthCheckConfig.HealthChecks is not { Count: > 0 };
     }
 
-    private static void RegisterDeepHealthCheckDependencies(
-        IServiceCollection services,
-        DeepHealthCheckRoot rootConfig,
-        IHealthChecksBuilder healthChecksBuilder)
-    {
-        // Register LogSeverityHealthCheck dependencies
-        if (IsEnabledLogSeverity(rootConfig))
-        {
-            services.AddMemoryCache();
-            services.TryAddSingleton<ILogSeverityLogger, LogSeverityLogger>();
-            services.TryAddSingleton<ILogSeverityLoggerProvider, LogSeverityLoggerProvider>();
-            healthChecksBuilder.BindContext<LogSeverityHealthCheck, LogSeverityContext>();
-        }
-    }
+    // private static void RegisterDynamicHealthCheckDependencies(
+    //     IServiceCollection services,
+    //     DynamicHealthCheckRoot rootConfig,
+    //     IHealthChecksBuilder healthChecksBuilder)
+    // {
+    //     // Register LogSeverityHealthCheck dependencies
+    //     if (IsEnabledLogSeverity(rootConfig))
+    //     {
+    //         services.AddMemoryCache();
+    //         services.TryAddSingleton<ILogSeverityLogger, LogSeverityLogger>();
+    //         services.TryAddSingleton<ILogSeverityLoggerProvider, LogSeverityLoggerProvider>();
+    //         healthChecksBuilder.BindContext<LogSeverityHealthCheck, LogSeverityContext>();
+    //     }
+    // }
 
-    private static void UseDeepHealthCheckDependencies(
-        IApplicationBuilder app, 
-        DeepHealthCheckRoot? healthCheckConfig)
-    {
-        // Add LogSeverityHealthCheck dependencies
-        if (IsEnabledLogSeverity(healthCheckConfig!))
-        {
-            var provider = app.ApplicationServices.GetRequiredService<ILogSeverityLoggerProvider>();
-            var loggerFactory = app.ApplicationServices.GetRequiredService<ILoggerFactory>();
-            loggerFactory.AddProvider(provider);
-        }
-    }
+    // private static void UseDynamicHealthCheckDependencies(
+    //     IApplicationBuilder app, 
+    //     DynamicHealthCheckRoot? healthCheckConfig)
+    // {
+    //     // Add LogSeverityHealthCheck dependencies
+    //     if (IsEnabledLogSeverity(healthCheckConfig!))
+    //     {
+    //         var provider = app.ApplicationServices.GetRequiredService<ILogSeverityLoggerProvider>();
+    //         var loggerFactory = app.ApplicationServices.GetRequiredService<ILoggerFactory>();
+    //         loggerFactory.AddProvider(provider);
+    //     }
+    // }
 
-    private static bool IsEnabledLogSeverity(DeepHealthCheckRoot? healthCheckConfig)
+    private static bool IsEnabledLogSeverity(DynamicHealthCheckRoot? healthCheckConfig)
     {
         return !IsDisabled(healthCheckConfig) &&
                healthCheckConfig!.HealthChecks!
