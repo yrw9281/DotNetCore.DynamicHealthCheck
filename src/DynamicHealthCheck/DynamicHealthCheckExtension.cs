@@ -6,7 +6,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Logging;
 
 namespace DynamicHealthCheck;
 
@@ -17,6 +16,7 @@ public static class DynamicHealthCheckExtension
     ///     This method scans the application's assemblies for implementations of <see cref="IHealthCheck" /> and registers
     ///     them if configured well.
     /// </summary>
+    /// <param name="services"></param>
     /// <param name="configuration">The application configuration used to retrieve health check settings.</param>
     /// <param name="configSectionName">
     ///     The name of the configuration section containing health check settings. Defaults to
@@ -36,7 +36,7 @@ public static class DynamicHealthCheckExtension
         // Add normal HealthChecks only if disabled.
         if (IsDisabled(rootConfig)) return healthChecksBuilder;
 
-        // Add related services
+        // Add dynamic health check config service
         services.AddSingleton(typeof(IDynamicHealthCheckConfigService<>), typeof(DynamicHealthCheckConfigService<>));
 
         // Get all IHealthCheck implements
@@ -46,35 +46,41 @@ public static class DynamicHealthCheckExtension
                            && type is { IsClass: true, IsAbstract: false })
             .ToList();
 
-        // Register HealthChecks
-        foreach (var healtCheckConfig in rootConfig!.HealthChecks!)
+        // Parse HealthChecks configurations
+        foreach (var healthCheckConfig in rootConfig!.HealthChecks!)
         {
-            if (heathChecks.All(type => type.Name != healtCheckConfig.HealthCheckName)) continue;
+            if (heathChecks.All(type => type.Name != healthCheckConfig.HealthCheckName)) continue;
 
-            var healthCheckType = heathChecks.First(type => type.Name == healtCheckConfig.HealthCheckName);
+            var healthCheckType = heathChecks.First(type => type.Name == healthCheckConfig.HealthCheckName);
 
-            services.TryAddEnumerable(new ServiceDescriptor(typeof(IHealthCheck), healthCheckType,
-                healtCheckConfig.ServiceLifetime));
+            // DI health check
+            switch (healthCheckConfig.ServiceLifetime)
+            {
+                case ServiceLifetime.Singleton:
+                    services.TryAddSingleton(healthCheckType);
+                    break;
+                case ServiceLifetime.Scoped:
+                    services.TryAddScoped(healthCheckType);
+                    break;
+                case ServiceLifetime.Transient:
+                    services.TryAddTransient(healthCheckType);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
 
+            // Register health check
             healthChecksBuilder.Add(new HealthCheckRegistration(
-                healtCheckConfig.ServiceName,
+                healthCheckConfig.ServiceName,
                 serviceProvider =>
-                {
-                    var healthCheck = serviceProvider.GetServices<IHealthCheck>().First(s =>
-                        s.GetType().Name.Equals(healtCheckConfig.HealthCheckName,
-                            StringComparison.CurrentCultureIgnoreCase));
-                    return healthCheck;
-                },
-                healtCheckConfig.FailureStatus,
-                healtCheckConfig.Tags,
-                healtCheckConfig.TimeoutInSeconds > 0
-                    ? TimeSpan.FromSeconds(Convert.ToDouble(healtCheckConfig.TimeoutInSeconds))
+                    HealthCheckFactory.CreateHealthCheck(serviceProvider, healthCheckType, healthCheckConfig.ServiceLifetime),
+                healthCheckConfig.FailureStatus,
+                healthCheckConfig.Tags,
+                healthCheckConfig.TimeoutInSeconds > 0
+                    ? TimeSpan.FromSeconds(Convert.ToDouble(healthCheckConfig.TimeoutInSeconds))
                     : null
             ));
         }
-
-        // Add self provided HealthChecks if configured
-        // RegisterDynamicHealthCheckDependencies(services, rootConfig, healthChecksBuilder);
 
         return healthChecksBuilder;
     }
@@ -85,7 +91,7 @@ public static class DynamicHealthCheckExtension
     /// <typeparam name="THealthCheck">Custom health check class.</typeparam>
     /// <typeparam name="TContext">Custom health check context class.</typeparam>
     /// <returns>An <see cref="IHealthChecksBuilder" /> instance for further health check configuration.</returns>
-    public static IHealthChecksBuilder BindContext<THealthCheck, TContext>(this IHealthChecksBuilder builder)
+    public static IHealthChecksBuilder BindHealthCheckContext<THealthCheck, TContext>(this IHealthChecksBuilder builder)
         where THealthCheck : class, IHealthCheck
         where TContext : class
     {
@@ -97,6 +103,7 @@ public static class DynamicHealthCheckExtension
     ///     Configures the application to use dynamic health checks middleware.
     ///     This method sets up a custom middleware that responds to requests at the specified path with health check status.
     /// </summary>
+    /// <param name="app"></param>
     /// <param name="path">
     ///     The path where the health check requests will be handled. Defaults to
     ///     <see cref="Constants.DEFAULT_HEALTH_CHECK_PATH" />.
@@ -105,10 +112,6 @@ public static class DynamicHealthCheckExtension
     public static IApplicationBuilder UseDynamicHealthCheck(this IApplicationBuilder app,
         string path = Constants.DEFAULT_HEALTH_CHECK_PATH)
     {
-        var healthCheckConfig = ConfigurationManager.Get(app.ApplicationServices.GetService<IConfiguration>()!);
-
-        // UseDynamicHealthCheckDependencies(app, healthCheckConfig);
-
         // Use custom middleware for health checks
         app.Use(async (context, next) =>
         {
@@ -125,7 +128,10 @@ public static class DynamicHealthCheckExtension
                 await next();
             }
         });
-
+        
+        // Apply all dependencies
+        MiddlewareManager.ApplyMiddlewares(app);
+        
         return app;
     }
 
@@ -136,38 +142,4 @@ public static class DynamicHealthCheckExtension
                healthCheckConfig.HealthChecks is not { Count: > 0 };
     }
 
-    // private static void RegisterDynamicHealthCheckDependencies(
-    //     IServiceCollection services,
-    //     DynamicHealthCheckRoot rootConfig,
-    //     IHealthChecksBuilder healthChecksBuilder)
-    // {
-    //     // Register LogSeverityHealthCheck dependencies
-    //     if (IsEnabledLogSeverity(rootConfig))
-    //     {
-    //         services.AddMemoryCache();
-    //         services.TryAddSingleton<ILogSeverityLogger, LogSeverityLogger>();
-    //         services.TryAddSingleton<ILogSeverityLoggerProvider, LogSeverityLoggerProvider>();
-    //         healthChecksBuilder.BindContext<LogSeverityHealthCheck, LogSeverityContext>();
-    //     }
-    // }
-
-    // private static void UseDynamicHealthCheckDependencies(
-    //     IApplicationBuilder app, 
-    //     DynamicHealthCheckRoot? healthCheckConfig)
-    // {
-    //     // Add LogSeverityHealthCheck dependencies
-    //     if (IsEnabledLogSeverity(healthCheckConfig!))
-    //     {
-    //         var provider = app.ApplicationServices.GetRequiredService<ILogSeverityLoggerProvider>();
-    //         var loggerFactory = app.ApplicationServices.GetRequiredService<ILoggerFactory>();
-    //         loggerFactory.AddProvider(provider);
-    //     }
-    // }
-
-    private static bool IsEnabledLogSeverity(DynamicHealthCheckRoot? healthCheckConfig)
-    {
-        return !IsDisabled(healthCheckConfig) &&
-               healthCheckConfig!.HealthChecks!
-                   .Any(d => d.HealthCheckName == "LogSeverityHealthCheck");
-    }
 }

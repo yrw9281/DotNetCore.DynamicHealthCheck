@@ -1,8 +1,9 @@
+using DynamicHealthCheck.LogSeverity.Models;
 using DynamicHealthCheck.Services;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
-namespace DynamicHealthCheck.LogSeverity;
+namespace DynamicHealthCheck.LogSeverity.Services;
 
 internal class LogSeverityLogger(
     IMemoryCache memoryCache,

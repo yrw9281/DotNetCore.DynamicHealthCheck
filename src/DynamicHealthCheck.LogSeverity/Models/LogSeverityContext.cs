@@ -1,4 +1,4 @@
-namespace DynamicHealthCheck.LogSeverity;
+namespace DynamicHealthCheck.LogSeverity.Models;
 
 internal class LogSeverityContext
 {

@@ -1,4 +1,5 @@
 using DynamicHealthCheck;
+using DynamicHealthCheck.LogSeverity;
 
 namespace DynamicHealthCheck.Demo;
 
@@ -11,8 +12,9 @@ public static class Program
 
         // Add services to the container
         builder.Services.AddControllers();
-        builder.Services.AddDynamicHealthCheck(builder.Configuration);
-
+        builder.Services.AddDynamicHealthCheck(builder.Configuration)
+            .AddLogSeverity();
+        
         // Build the application
         var app = builder.Build();
 

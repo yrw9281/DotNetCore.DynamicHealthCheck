@@ -56,17 +56,10 @@ internal static class ConfigurationManager
 
         var sections = GetHealthCheckConfigSection(configuration).GetChildren();
 
-        var result = new List<TContext>();
-
-        foreach (var section in sections)
-        {
-            var target = section.GetSection(Constants.PROPERTY_NAME_CONTEXT)?
-                .Get<TContext>();
-
-            if (target == null) continue;
-
-            result.Add(target);
-        }
+        var result = sections.Select(section => 
+            section.GetSection(Constants.PROPERTY_NAME_CONTEXT)?.Get<TContext>())
+            .OfType<TContext>()
+            .ToList();
 
         return result
                ?? throw new ArgumentException($"The type {typeof(THealthCheck).Name} has not been well configured.");

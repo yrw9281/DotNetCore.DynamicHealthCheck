@@ -1,3 +1,4 @@
+using DynamicHealthCheck.LogSeverity.Models;
 using DynamicHealthCheck.Services;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
