@@ -1,85 +1,44 @@
-# DotNetCore.DynamicHealthCheck
+# DynamicHealthCheck
 
-Auto dynamic health check wiring for ASP.NET Core services.
+A .NET 8 library for dynamic health check configuration and injection.
 
-## Features
+## Key Feature: Dynamic Health Check Context Binding
 
-- Discovers every `IHealthCheck` in loaded assemblies and registers them according to configuration.
-- Supports per-check lifetimes, failure statuses, tags, and timeouts driven by strongly typed options.
-- Supplies custom context objects to health checks via `IDynamicHealthCheckConfigService<T>`.
-- Provides middleware that surfaces a `/health` endpoint and lets extensions plug extra middleware in.
-- Includes an optional log-severity health check that monitors cached log events.
+This project leverages the generic marker interface `IHealthCheckContext<THealthCheck>` to associate health check implementations with their configuration contexts. By implementing this interface on your context classes, you enable automatic binding and dynamic registration of health check configurations.
 
-## Project Layout
+### How It Works
 
-- `src/DynamicHealthCheck` – core library with configuration manager, factory, and middleware helpers.
-- `src/Extensions/LogSeverity` – extension package offering log severity monitoring.
-- `samples/DynamicHealthCheck.Demo` – minimal API sample showcasing configuration and usage.
+- **Define a context class** for your health check and implement `IHealthCheckContext<THealthCheck>`.
+- **Register health checks dynamically**: The library scans for context classes implementing the interface and binds them to their corresponding health check types.
+- **Inject and use configs**: Health check configurations are injected and managed automatically, simplifying setup and maintenance.
 
-## Quick Start
-
-Prerequisite: .NET 8 SDK.
-
-1. Reference the library (NuGet package or project reference).
-1. Register dynamic health checks in `Program.cs`:
+### Example Usage
 
 ```csharp
-builder.Services
-    .AddDynamicHealthCheck(builder.Configuration)
-    .AddLogSeverity(); // optional extension
-
-var app = builder.Build();
-app.UseDynamicHealthCheck(); // defaults to /health
-```
-
-1. Configure checks in `appsettings.json`:
-
-```json
+public class MyHealthCheckContext : IHealthCheckContext<MyHealthCheck>
 {
-  "DynamicHealthCheck": {
-    "HealthChecks": [
-      {
-        "ServiceName": "LogSeverity",
-        "HealthCheckName": "LogSeverityHealthCheck",
-        "FailureStatus": "Unhealthy",
-        "ServiceLifetime": "Singleton",
-        "TimeoutInSeconds": 30,
-        "Tags": ["logging"],
-        "Context": {
-          "LogLevels": [
-            { "LogLevel": "Error", "MaxWarningCount": 3, "PeriodInMinutes": 1 }
-          ]
-        }
-      }
-    ]
-  }
+    // Configuration properties
 }
 ```
 
-### Configuration Notes
+This enables your health check (`MyHealthCheck`) to be registered and configured dynamically, without manual wiring.
 
-- `Disabled` disables all dynamic registrations when set to `true`.
-- `ServiceName` is the registration key exposed to the health check pipeline.
-- `HealthCheckName` must match the class name of the `IHealthCheck` implementation.
-- `ServiceLifetime` controls how the check is registered in DI.
-- `Context` binds to a strongly typed class via `BindHealthCheckContext<THealthCheck, TContext>()`.
+## Configuration Models
 
-### Authoring Custom Health Checks
+The library provides flexible configuration models for health checks:
 
-1. Implement `IHealthCheck` as usual.
-1. Implement `IHealthCheckContext<MyCheck>` on your context class so it is automatically discovered.
-1. Inject `IDynamicHealthCheckConfigService<MyCheck>` to resolve contexts and failure statuses at runtime.
+- `DynamicHealthCheckConfig`: Defines individual health check settings, including service name, health check name, failure status, service lifetime, timeout, tags, and context.
+- `DynamicHealthCheckRoot`: Aggregates multiple health check configs and supports global enable/disable.
 
-## Demo Application
+These models allow you to declaratively control health check registration and behavior via code or configuration files.
 
-Run the sample to see dynamic registration and the log severity check in action:
+## Benefits
 
-```bash
-dotnet run --project samples/DynamicHealthCheck.Demo
-```
-
-Visit `/health` for overall status. Use `/log/logWarning`, `/log/logError`, or `/log/logCritical` to generate log entries and observe how the log severity health check reacts.
+- Strongly-typed configuration binding
+- Automatic context-health check association
+- Flexible and declarative config models
+- Simplified dynamic registration and injection
 
 ## License
 
-MIT License – see `LICENSE` for details.
+This project is licensed under the MIT License.
