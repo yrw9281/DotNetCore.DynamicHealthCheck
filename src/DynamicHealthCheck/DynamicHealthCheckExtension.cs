@@ -33,6 +33,9 @@ public static class DynamicHealthCheckExtension
 
         var rootConfig = ConfigurationManager.Get(configuration);
 
+        // Auto-discover any health check contexts registered via IHealthCheckContext implementations.
+        ConfigurationManager.EnsureHealthCheckContextBindings();
+
         // Add normal HealthChecks only if disabled.
         if (IsDisabled(rootConfig)) return healthChecksBuilder;
 
@@ -128,10 +131,10 @@ public static class DynamicHealthCheckExtension
                 await next();
             }
         });
-        
+
         // Apply all dependencies
         MiddlewareManager.ApplyMiddlewares(app);
-        
+
         return app;
     }
 

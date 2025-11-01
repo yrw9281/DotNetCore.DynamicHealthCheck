@@ -1,5 +1,4 @@
-﻿using DynamicHealthCheck.LogSeverity.Models;
-using DynamicHealthCheck.LogSeverity.Services;
+﻿using DynamicHealthCheck.LogSeverity.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -13,8 +12,6 @@ public static class LogSeverityHealthCheckExtension
         builder.Services.AddMemoryCache();
         builder.Services.TryAddSingleton<ILogSeverityLogger, LogSeverityLogger>();
         builder.Services.TryAddSingleton<ILogSeverityLoggerProvider, LogSeverityLoggerProvider>();
-        
-        builder.BindHealthCheckContext<LogSeverityHealthCheck, LogSeverityContext>();
 
         MiddlewareManager.RegisterMiddleware(applicationBuilder =>
         {

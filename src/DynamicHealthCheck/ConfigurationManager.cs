@@ -1,3 +1,4 @@
+using System.Reflection;
 using DynamicHealthCheck.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -8,6 +9,8 @@ internal static class ConfigurationManager
 {
     // Dictionary to hold the mapping between IHealthCheck and its config type
     private static readonly Dictionary<Type, Type> ConfigsDictionary = new();
+    private static readonly object SyncRoot = new();
+    private static bool contextsInitialized;
 
     // Default config section
     public static string ConfigSection { get; set; } = Constants.DEFAULT_CONFIG_SECTION_NAME;
@@ -17,8 +20,47 @@ internal static class ConfigurationManager
         where THealthCheck : class, IHealthCheck
         where TContext : class
     {
-        if (!ConfigsDictionary.ContainsKey(typeof(THealthCheck)))
-            ConfigsDictionary[typeof(THealthCheck)] = typeof(TContext);
+        SetHealthCheckContext(typeof(THealthCheck), typeof(TContext));
+    }
+
+    internal static void SetHealthCheckContext(Type healthCheckType, Type contextType)
+    {
+        if (healthCheckType is null) throw new ArgumentNullException(nameof(healthCheckType));
+        if (contextType is null) throw new ArgumentNullException(nameof(contextType));
+        if (!typeof(IHealthCheck).IsAssignableFrom(healthCheckType))
+            throw new ArgumentException($"The type {healthCheckType.Name} is not a valid {nameof(IHealthCheck)}.",
+                nameof(healthCheckType));
+
+        lock (SyncRoot)
+        {
+            if (!ConfigsDictionary.ContainsKey(healthCheckType))
+                ConfigsDictionary[healthCheckType] = contextType;
+        }
+    }
+
+    public static void EnsureHealthCheckContextBindings()
+    {
+        if (contextsInitialized) return;
+
+        lock (SyncRoot)
+        {
+            if (contextsInitialized) return;
+
+            foreach (var (healthCheckType, contextType) in DiscoverHealthCheckContextMappings())
+            {
+                if (healthCheckType is null || contextType is null) continue;
+                if (!typeof(IHealthCheck).IsAssignableFrom(healthCheckType)) continue;
+
+                if (contextType.IsAbstract || contextType.IsInterface) continue;
+
+                if (!contextType.GetInterfaces().Any(IsHealthCheckContextInterface)) continue;
+
+                if (!ConfigsDictionary.ContainsKey(healthCheckType))
+                    ConfigsDictionary[healthCheckType] = contextType;
+            }
+
+            contextsInitialized = true;
+        }
     }
 
     // Method to get the config context for a health check
@@ -27,7 +69,7 @@ internal static class ConfigurationManager
         where THealthCheck : class, IHealthCheck
         where TContext : class
     {
-        if (!ConfigsDictionary.TryGetValue(typeof(THealthCheck), out var configType) ||
+        if (!TryGetContextType(typeof(THealthCheck), out var configType) ||
             configType != typeof(TContext))
             throw new ArgumentException($"The type {typeof(THealthCheck).Name} has not been well configured.");
 
@@ -50,7 +92,7 @@ internal static class ConfigurationManager
         where THealthCheck : class, IHealthCheck
         where TContext : class
     {
-        if (!ConfigsDictionary.TryGetValue(typeof(THealthCheck), out var configType) ||
+        if (!TryGetContextType(typeof(THealthCheck), out var configType) ||
             configType != typeof(TContext))
             throw new ArgumentException($"The type {typeof(THealthCheck).Name} has not been well configured.");
 
@@ -84,6 +126,44 @@ internal static class ConfigurationManager
     private static IConfigurationSection GetRootSection(IConfiguration configuration)
     {
         return configuration.GetSection(ConfigSection);
+    }
+
+    private static bool TryGetContextType(Type healthCheckType, out Type? contextType)
+    {
+        lock (SyncRoot)
+        {
+            return ConfigsDictionary.TryGetValue(healthCheckType, out contextType);
+        }
+    }
+
+    private static bool IsHealthCheckContextInterface(Type type)
+    {
+        return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IHealthCheckContext<>);
+    }
+
+    private static IEnumerable<(Type? HealthCheckType, Type? ContextType)> DiscoverHealthCheckContextMappings()
+    {
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            Type[] candidateTypes;
+
+            try
+            {
+                candidateTypes = assembly.GetTypes();
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                candidateTypes = ex.Types.OfType<Type>().ToArray();
+            }
+
+            foreach (var type in candidateTypes.Where(t => t is { IsClass: true, IsAbstract: false }))
+            {
+                foreach (var implementedInterface in type.GetInterfaces().Where(IsHealthCheckContextInterface))
+                {
+                    yield return (implementedInterface.GenericTypeArguments.FirstOrDefault(), type);
+                }
+            }
+        }
     }
 
     private static IConfigurationSection GetHealthCheckConfigSection(IConfiguration configuration)
