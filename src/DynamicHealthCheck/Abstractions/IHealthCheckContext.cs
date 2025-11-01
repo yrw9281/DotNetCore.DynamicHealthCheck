@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-namespace DynamicHealthCheck;
+namespace DynamicHealthCheck.Abstractions;
 
 /// <summary>
 ///     Marker interface that links a health check instance to its configuration context type.

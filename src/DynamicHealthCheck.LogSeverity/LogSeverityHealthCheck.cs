@@ -1,5 +1,5 @@
 using DynamicHealthCheck.LogSeverity.Models;
-using DynamicHealthCheck.Services;
+using DynamicHealthCheck.Abstractions;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 

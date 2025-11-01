@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using DynamicHealthCheck.Abstractions;
 using DynamicHealthCheck.Models;
@@ -60,7 +58,7 @@ internal sealed class DynamicHealthCheckConfigurationProvider : IDynamicHealthCh
 
         var section = FindHealthCheckSection(typeof(THealthCheck).Name, serviceName);
         var context = section?
-            .GetSection(Constants.PROPERTY_NAME_CONTEXT)
+            .GetSection(Constants.CONFIG_SECTION_PROPERTY_NAME_CONTEXT)
             .Get<TContext>();
 
         return context ?? throw new ArgumentException(
@@ -85,7 +83,7 @@ internal sealed class DynamicHealthCheckConfigurationProvider : IDynamicHealthCh
         foreach (var section in sections)
         {
             var context = section
-                .GetSection(Constants.PROPERTY_NAME_CONTEXT)
+                .GetSection(Constants.CONFIG_SECTION_PROPERTY_NAME_CONTEXT)
                 .Get<TContext>();
 
             if (context != null)
@@ -110,7 +108,7 @@ internal sealed class DynamicHealthCheckConfigurationProvider : IDynamicHealthCh
 
     private IConfigurationSection GetHealthChecksSection()
     {
-        return GetRootSection().GetSection(Constants.PROPERTY_NAME_HEALTHCHECKS);
+        return GetRootSection().GetSection(Constants.CONFIG_SECTION_PROPERTY_NAME_HEALTH_CHECKS);
     }
 
     private IEnumerable<DynamicHealthCheckConfig>? GetHealthCheckConfigsByHealthCheckName(string healthCheckName)

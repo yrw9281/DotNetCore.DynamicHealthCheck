@@ -9,7 +9,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-    <ProjectReference Include="../../DynamicHealthCheck/DynamicHealthCheck.csproj"/>
+      <ProjectReference Include="../DynamicHealthCheck/DynamicHealthCheck.csproj" />
     </ItemGroup>
-
 </Project>

@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-namespace DynamicHealthCheck.Services;
+namespace DynamicHealthCheck.Abstractions;
 
 public interface IDynamicHealthCheckConfigService<THealthCheck> where THealthCheck : IHealthCheck
 {
