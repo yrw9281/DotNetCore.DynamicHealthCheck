@@ -1,34 +1,32 @@
-using Microsoft.Extensions.Configuration;
+using DynamicHealthCheck.Abstractions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace DynamicHealthCheck.Services;
 
-public class DynamicHealthCheckConfigService<THealthCheck>(IConfiguration configuration)
+internal class DynamicHealthCheckConfigService<THealthCheck>(IDynamicHealthCheckConfigurationProvider configurationProvider)
     : IDynamicHealthCheckConfigService<THealthCheck>
     where THealthCheck : class, IHealthCheck
 {
     public TContext GetContext<TContext>(HealthCheckContext healthCheckContext)
         where TContext : class
     {
-        return ConfigurationManager.GetHealthCheckContext<THealthCheck, TContext>(configuration,
-            healthCheckContext.Registration.Name);
+        return configurationProvider.GetHealthCheckContext<THealthCheck, TContext>(healthCheckContext.Registration.Name);
     }
 
     public IEnumerable<TContext> GetContexts<TContext>() where TContext : class
     {
-        return ConfigurationManager.GetHealthCheckContexts<THealthCheck, TContext>(configuration);
+        return configurationProvider.GetHealthCheckContexts<THealthCheck, TContext>();
     }
 
     public HealthStatus GetFailureStatus(string serviceName)
     {
-        return ConfigurationManager.GetHealthCheckConfig<THealthCheck>(configuration, serviceName)
-            .FailureStatus;
+        return configurationProvider.GetHealthCheckConfig<THealthCheck>(serviceName).FailureStatus;
     }
 
     public HealthStatus GetFailureStatus(HealthCheckContext healthCheckContext)
     {
-        return ConfigurationManager
-            .GetHealthCheckConfig<THealthCheck>(configuration, healthCheckContext.Registration.Name)
+        return configurationProvider
+            .GetHealthCheckConfig<THealthCheck>(healthCheckContext.Registration.Name)
             .FailureStatus;
     }
 }

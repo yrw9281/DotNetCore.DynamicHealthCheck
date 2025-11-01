@@ -1,4 +1,6 @@
-﻿using DynamicHealthCheck.Models;
+﻿using DynamicHealthCheck.Abstractions;
+using DynamicHealthCheck.Configuration;
+using DynamicHealthCheck.Models;
 using DynamicHealthCheck.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -27,20 +29,25 @@ public static class DynamicHealthCheckExtension
         IConfiguration configuration,
         string configSectionName = Constants.DEFAULT_CONFIG_SECTION_NAME)
     {
-        ConfigurationManager.ConfigSection = configSectionName;
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(configuration);
 
         var healthChecksBuilder = services.AddHealthChecks();
 
-        var rootConfig = ConfigurationManager.Get(configuration);
+        services.TryAddSingleton<IHealthCheckContextRegistry, HealthCheckContextRegistry>();
+        services.TryAddSingleton<IDynamicHealthCheckConfigurationProvider>(sp =>
+            new DynamicHealthCheckConfigurationProvider(
+                configuration,
+                configSectionName,
+                sp.GetRequiredService<IHealthCheckContextRegistry>()));
+        services.TryAddSingleton(typeof(IDynamicHealthCheckConfigService<>), typeof(DynamicHealthCheckConfigService<>));
 
-        // Auto-discover any health check contexts registered via IHealthCheckContext implementations.
-        ConfigurationManager.EnsureHealthCheckContextBindings();
+        var rootConfig = configuration
+            .GetSection(configSectionName)
+            .Get<DynamicHealthCheckRoot>();
 
         // Add normal HealthChecks only if disabled.
         if (IsDisabled(rootConfig)) return healthChecksBuilder;
-
-        // Add dynamic health check config service
-        services.AddSingleton(typeof(IDynamicHealthCheckConfigService<>), typeof(DynamicHealthCheckConfigService<>));
 
         // Get all IHealthCheck implements
         var heathChecks = AppDomain.CurrentDomain.GetAssemblies()
@@ -98,7 +105,18 @@ public static class DynamicHealthCheckExtension
         where THealthCheck : class, IHealthCheck
         where TContext : class
     {
-        ConfigurationManager.SetHealthCheckContext<THealthCheck, TContext>();
+        ArgumentNullException.ThrowIfNull(builder);
+
+        if (!typeof(IHealthCheckContext<THealthCheck>).IsAssignableFrom(typeof(TContext)))
+        {
+            throw new InvalidOperationException(
+                $"Context type '{typeof(TContext).Name}' must implement IHealthCheckContext<{typeof(THealthCheck).Name}>.");
+        }
+
+        builder.Services.TryAddSingleton<IHealthCheckContextRegistry, HealthCheckContextRegistry>();
+        builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IHealthCheckContextBinding>(
+            new HealthCheckContextBinding(typeof(THealthCheck), typeof(TContext))));
+
         return builder;
     }
 
@@ -132,8 +150,12 @@ public static class DynamicHealthCheckExtension
             }
         });
 
-        // Apply all dependencies
-        MiddlewareManager.ApplyMiddlewares(app);
+        var contributors = app.ApplicationServices.GetServices<IMiddlewarePipelineContributor>();
+
+        foreach (var contributor in contributors)
+        {
+            contributor.Configure(app);
+        }
 
         return app;
     }
