@@ -8,8 +8,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\DynamicHealthCheck.LogSeverity\DynamicHealthCheck.LogSeverity.csproj" />
-        <ProjectReference Include="..\DynamicHealthCheck\DynamicHealthCheck.csproj" />
+    <ProjectReference Include="../../src/Extensions/LogSeverity/DynamicHealthCheck.LogSeverity.csproj" />
+    <ProjectReference Include="../../src/DynamicHealthCheck/DynamicHealthCheck.csproj" />
     </ItemGroup>
 
 </Project>

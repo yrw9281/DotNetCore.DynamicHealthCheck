@@ -1,4 +1,3 @@
-using DynamicHealthCheck;
 using DynamicHealthCheck.LogSeverity;
 
 namespace DynamicHealthCheck.Demo;

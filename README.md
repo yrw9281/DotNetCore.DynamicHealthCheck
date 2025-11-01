@@ -13,8 +13,8 @@ Auto dynamic health check wiring for ASP.NET Core services.
 ## Project Layout
 
 - `src/DynamicHealthCheck` – core library with configuration manager, factory, and middleware helpers.
-- `src/DynamicHealthCheck.LogSeverity` – extension package offering log severity monitoring.
-- `src/DynamicHealthCheck.Demo` – minimal API sample showcasing configuration and usage.
+- `src/Extensions/LogSeverity` – extension package offering log severity monitoring.
+- `samples/DynamicHealthCheck.Demo` – minimal API sample showcasing configuration and usage.
 
 ## Quick Start
 
@@ -67,7 +67,7 @@ app.UseDynamicHealthCheck(); // defaults to /health
 ### Authoring Custom Health Checks
 
 1. Implement `IHealthCheck` as usual.
-1. Call `builder.BindHealthCheckContext<MyCheck, MyContext>()` if the check needs context data.
+1. Implement `IHealthCheckContext<MyCheck>` on your context class so it is automatically discovered.
 1. Inject `IDynamicHealthCheckConfigService<MyCheck>` to resolve contexts and failure statuses at runtime.
 
 ## Demo Application
@@ -75,7 +75,7 @@ app.UseDynamicHealthCheck(); // defaults to /health
 Run the sample to see dynamic registration and the log severity check in action:
 
 ```bash
-dotnet run --project src/DynamicHealthCheck.Demo
+dotnet run --project samples/DynamicHealthCheck.Demo
 ```
 
 Visit `/health` for overall status. Use `/log/logWarning`, `/log/logError`, or `/log/logCritical` to generate log entries and observe how the log severity health check reacts.
